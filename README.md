@@ -18,6 +18,22 @@ PromptBox is a Chrome extension for saving, organizing, and quickly reusing Chat
 4. Click **Load unpacked**.
 5. Select the project root folder (`promptbox-extension`).
 
+## Project Structure
+
+```
+.
+├── assets/
+├── docs/
+│   └── store.md
+├── src/
+│   ├── popup.css
+│   ├── popup.html
+│   └── popup.js
+├── CHANGELOG.md
+├── README.md
+└── manifest.json
+```
+
 ## Roadmap
 
 - Draft autosave improvements
