@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "PromptBox",
+  "version": "1.0.0",
+  "description": "Save, organize, search and copy AI prompts instantly.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PromptBox"
+  },
+  "permissions": [
+    "storage"
+  ]
+}
