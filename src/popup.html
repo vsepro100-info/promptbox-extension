@@ -17,12 +17,15 @@
     </header>
 
     <section class="search-section">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search prompts..."
-        autocomplete="off"
-      />
+      <div class="search-input-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search prompts (title, category, text)..."
+          autocomplete="off"
+        />
+      </div>
     </section>
 
     <section id="formSection" class="form-section hidden">
@@ -47,7 +50,7 @@
         <label for="promptInput">Prompt</label>
         <textarea
           id="promptInput"
-          rows="7"
+          rows="4"
           placeholder="Paste your prompt here..."
           required
         ></textarea>
@@ -64,6 +67,10 @@
         <div class="empty-state-title">No prompts yet.</div>
         <div class="empty-state-text">Start by adding your first prompt.</div>
         <button id="emptyAddBtn" class="primary-btn empty-add-btn">+ Add your first prompt</button>
+      </div>
+      <div id="noResultsState" class="empty-state hidden">
+        <div class="empty-state-title">No prompts found</div>
+        <div class="empty-state-text">Try a different query or clear the search.</div>
       </div>
       <div id="promptList" class="prompt-list"></div>
     </section>

@@ -1,5 +1,6 @@
 const STORAGE_KEY = "promptbox_prompts";
 const DRAFT_KEY = "promptbox_draft";
+const SEARCH_DEBOUNCE_MS = 300;
 
 const toggleFormBtn = document.getElementById("toggleFormBtn");
 const formSection = document.getElementById("formSection");
@@ -12,15 +13,17 @@ const cancelBtn = document.getElementById("cancelBtn");
 const searchInput = document.getElementById("searchInput");
 const promptList = document.getElementById("promptList");
 const emptyState = document.getElementById("emptyState");
+const noResultsState = document.getElementById("noResultsState");
 const toast = document.getElementById("toast");
 const emptyAddBtn = document.getElementById("emptyAddBtn");
 
 let prompts = [];
 let isFormOpen = false;
+let searchDebounceTimer;
 
 document.addEventListener("DOMContentLoaded", async () => {
   prompts = await getPrompts();
-  renderPrompts(prompts);
+  renderPrompts(prompts, "");
   await restoreDraftIfExists();
   bindDraftAutosave();
 });
@@ -76,13 +79,19 @@ promptForm.addEventListener("submit", async (e) => {
 
   await savePrompts(prompts);
   await clearDraft();
-  renderPrompts(filterPrompts(searchInput.value.trim()));
+  const currentQuery = searchInput.value.trim();
+  renderPrompts(filterPrompts(currentQuery), currentQuery);
   closeForm();
 });
 
 searchInput.addEventListener("input", () => {
-  const filtered = filterPrompts(searchInput.value.trim());
-  renderPrompts(filtered);
+  clearTimeout(searchDebounceTimer);
+
+  searchDebounceTimer = setTimeout(() => {
+    const query = searchInput.value.trim();
+    const filtered = filterPrompts(query);
+    renderPrompts(filtered, query);
+  }, SEARCH_DEBOUNCE_MS);
 });
 
 async function openFormForCreate() {
@@ -142,15 +151,25 @@ function closeForm() {
   isFormOpen = false;
 }
 
-function renderPrompts(items) {
+function renderPrompts(items, query = "") {
   promptList.innerHTML = "";
 
+  const hasQuery = Boolean(query);
+
   if (!items.length) {
+    if (hasQuery) {
+      emptyState.classList.add("hidden");
+      noResultsState.classList.remove("hidden");
+      return;
+    }
+
+    noResultsState.classList.add("hidden");
     emptyState.classList.remove("hidden");
     return;
   }
 
   emptyState.classList.add("hidden");
+  noResultsState.classList.add("hidden");
 
   items.forEach((item) => {
     const card = document.createElement("div");
@@ -212,7 +231,8 @@ function bindCardActions() {
       const id = btn.dataset.id;
       prompts = prompts.filter((p) => p.id !== id);
       await savePrompts(prompts);
-      renderPrompts(filterPrompts(searchInput.value.trim()));
+      const currentQuery = searchInput.value.trim();
+      renderPrompts(filterPrompts(currentQuery), currentQuery);
       showToast("Prompt deleted.");
     });
   });
