@@ -34,6 +34,10 @@ PromptBox is a Chrome extension for saving, organizing, and quickly reusing Chat
 └── manifest.json
 ```
 
+## Privacy
+
+Please review the [Privacy Policy](./PRIVACY.md) for details on how PromptBox handles data.
+
 ## Roadmap
 
 - Draft autosave improvements
