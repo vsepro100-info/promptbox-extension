@@ -2,6 +2,72 @@ const STORAGE_KEY = "promptbox_prompts";
 const DRAFT_KEY = "promptbox_draft";
 const SEARCH_DEBOUNCE_MS = 300;
 
+const I18N = {
+  en: {
+    subtitle: "Save & reuse AI prompts instantly",
+    addPrompt: "+ Add Prompt",
+    close: "Close",
+    searchPlaceholder: "Search prompts (title, category, text)...",
+    titleLabel: "Title",
+    titlePlaceholder: "e.g. Rewrite email politely",
+    categoryLabel: "Category",
+    categoryPlaceholder: "e.g. Writing, Sales, SEO",
+    promptLabel: "Prompt",
+    promptPlaceholder: "Paste your prompt here...",
+    savePrompt: "Save Prompt",
+    cancel: "Cancel",
+    noPromptsTitle: "No prompts yet.",
+    noPromptsText: "Start by adding your first prompt.",
+    addFirstPrompt: "+ Add your first prompt",
+    noResultsTitle: "No prompts found",
+    noResultsText: "Try a different query or clear the search.",
+    toastRequired: "Title and prompt are required.",
+    toastUpdated: "Prompt updated.",
+    toastSaved: "Prompt saved.",
+    toastDraftSaved: "Draft saved.",
+    toastDraftRestored: "Draft restored.",
+    toastCopied: "Prompt copied.",
+    toastCopyFailed: "Failed to copy prompt.",
+    toastDeleted: "Prompt deleted.",
+    copy: "Copy",
+    edit: "Edit",
+    delete: "Delete"
+  },
+  ru: {
+    subtitle: "Сохраняйте и переиспользуйте AI-промпты мгновенно",
+    addPrompt: "+ Добавить промпт",
+    close: "Закрыть",
+    searchPlaceholder: "Поиск промптов (название, категория, текст)...",
+    titleLabel: "Название",
+    titlePlaceholder: "напр. Перепиши письмо в вежливом стиле",
+    categoryLabel: "Категория",
+    categoryPlaceholder: "напр. Тексты, Продажи, SEO",
+    promptLabel: "Промпт",
+    promptPlaceholder: "Вставьте ваш промпт сюда...",
+    savePrompt: "Сохранить промпт",
+    cancel: "Отмена",
+    noPromptsTitle: "Промптов пока нет.",
+    noPromptsText: "Начните с добавления первого промпта.",
+    addFirstPrompt: "+ Добавить первый промпт",
+    noResultsTitle: "Промпты не найдены",
+    noResultsText: "Попробуйте другой запрос или очистите поиск.",
+    toastRequired: "Название и промпт обязательны.",
+    toastUpdated: "Промпт обновлён.",
+    toastSaved: "Промпт сохранён.",
+    toastDraftSaved: "Черновик сохранён.",
+    toastDraftRestored: "Черновик восстановлен.",
+    toastCopied: "Промпт скопирован.",
+    toastCopyFailed: "Не удалось скопировать промпт.",
+    toastDeleted: "Промпт удалён.",
+    copy: "Копировать",
+    edit: "Изменить",
+    delete: "Удалить"
+  }
+};
+
+const DEFAULT_LOCALE = "en";
+let currentLocale = DEFAULT_LOCALE;
+
 const toggleFormBtn = document.getElementById("toggleFormBtn");
 const formSection = document.getElementById("formSection");
 const promptForm = document.getElementById("promptForm");
@@ -21,7 +87,22 @@ let prompts = [];
 let isFormOpen = false;
 let searchDebounceTimer;
 
+function t(key) {
+  return I18N[currentLocale]?.[key] ?? I18N[DEFAULT_LOCALE]?.[key] ?? key;
+}
+
+function applyLocalization() {
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+  applyLocalization();
   prompts = await getPrompts();
   renderPrompts(prompts, "");
   await restoreDraftIfExists();
@@ -54,7 +135,7 @@ promptForm.addEventListener("submit", async (e) => {
   const text = promptInput.value.trim();
 
   if (!title || !text) {
-    showToast("Title and prompt are required.");
+    showToast(t("toastRequired"));
     return;
   }
 
@@ -64,7 +145,7 @@ promptForm.addEventListener("submit", async (e) => {
         ? { ...item, title, category, text, updatedAt: Date.now() }
         : item
     );
-    showToast("Prompt updated.");
+    showToast(t("toastUpdated"));
   } else {
     prompts.unshift({
       id: generateId(),
@@ -74,7 +155,7 @@ promptForm.addEventListener("submit", async (e) => {
       createdAt: Date.now(),
       updatedAt: Date.now()
     });
-    showToast("Prompt saved.");
+    showToast(t("toastSaved"));
   }
 
   await savePrompts(prompts);
@@ -98,7 +179,7 @@ async function openFormForCreate() {
   promptForm.reset();
   promptIdInput.value = "";
   formSection.classList.remove("hidden");
-  toggleFormBtn.textContent = "Close";
+  toggleFormBtn.textContent = t("close");
   isFormOpen = true;
 
   const draft = await getDraft();
@@ -113,7 +194,7 @@ async function openFormForCreate() {
 
 function openFormForEdit(promptItem) {
   formSection.classList.remove("hidden");
-  toggleFormBtn.textContent = "Close";
+  toggleFormBtn.textContent = t("close");
   isFormOpen = true;
 
   promptIdInput.value = promptItem.id;
@@ -137,7 +218,7 @@ async function handleCloseForm() {
       category: categoryInput.value.trim(),
       text: promptInput.value.trim()
     });
-    showToast("Draft saved.");
+    showToast(t("toastDraftSaved"));
   }
 
   closeForm();
@@ -147,7 +228,7 @@ function closeForm() {
   promptForm.reset();
   promptIdInput.value = "";
   formSection.classList.add("hidden");
-  toggleFormBtn.textContent = "+ Add Prompt";
+  toggleFormBtn.textContent = t("addPrompt");
   isFormOpen = false;
 }
 
@@ -188,9 +269,9 @@ function renderPrompts(items, query = "") {
       </div>
       <div class="prompt-text">${escapeHtml(item.text)}</div>
       <div class="prompt-actions">
-        <button class="action-btn copy-btn" data-id="${item.id}">Copy</button>
-        <button class="action-btn edit-btn" data-id="${item.id}">Edit</button>
-        <button class="action-btn delete-btn" data-id="${item.id}">Delete</button>
+        <button class="action-btn copy-btn" data-id="${item.id}">${t("copy")}</button>
+        <button class="action-btn edit-btn" data-id="${item.id}">${t("edit")}</button>
+        <button class="action-btn delete-btn" data-id="${item.id}">${t("delete")}</button>
       </div>
     `;
 
@@ -209,9 +290,9 @@ function bindCardActions() {
 
       try {
         await navigator.clipboard.writeText(item.text);
-        showToast("Prompt copied.");
+        showToast(t("toastCopied"));
       } catch (error) {
-        showToast("Failed to copy prompt.");
+        showToast(t("toastCopyFailed"));
       }
     });
   });
@@ -233,7 +314,7 @@ function bindCardActions() {
       await savePrompts(prompts);
       const currentQuery = searchInput.value.trim();
       renderPrompts(filterPrompts(currentQuery), currentQuery);
-      showToast("Prompt deleted.");
+      showToast(t("toastDeleted"));
     });
   });
 }
@@ -276,7 +357,7 @@ async function restoreDraftIfExists() {
   if (!hasDraftData) return;
 
   formSection.classList.remove("hidden");
-  toggleFormBtn.textContent = "Close";
+  toggleFormBtn.textContent = t("close");
   isFormOpen = true;
 
   promptIdInput.value = "";
@@ -284,7 +365,7 @@ async function restoreDraftIfExists() {
   categoryInput.value = draft.category || "";
   promptInput.value = draft.text || "";
 
-  showToast("Draft restored.");
+  showToast(t("toastDraftRestored"));
 }
 
 function getPrompts() {
